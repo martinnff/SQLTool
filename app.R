@@ -3,14 +3,15 @@ library(dbplyr)
 library(DBI)
 library(DT)
 library(RMariaDB)
+library(shinythemes)
 
-
-ui <- fluidPage(
+ui <- fluidPage(theme = shinytheme('cosmo'),
+                h1('SQLTool'),
   fluidRow(
     column(
       6,
-      textAreaInput('query',h2('Query'),height = '250px',width='400px')
-      ),
+      textAreaInput('query',h2('Query'),height = '300px',width='400px'),
+      downloadButton('download',"Download the data")),
     column(
       6,
       textInput('username',h6('Username'),''),
@@ -20,9 +21,8 @@ ui <- fluidPage(
       textInput('database',h6('Database'),'')
     )
     ),
-  fluidRow(
-    DT::dataTableOutput("table")
-  )
+  
+  fluidRow(column(12,DTOutput('dto')))
 
 
 )
@@ -41,9 +41,15 @@ server <- function(input,output){
     dbGetQuery(con, input$query)
       },
       error = function(e){data.frame(Empty='Empty')}))
-  output$table = DT::renderDataTable({
+  output$dto <- renderDataTable(
     out()
-  })
+  )
+  output$download <- downloadHandler(
+    filename = function(){'download.csv'}, 
+    content = function(fname){
+      write.csv(out(), fname)
+    }
+  )
   
 }
 
